@@ -1,11 +1,24 @@
+// Dependencies
 const express = require('express')
 const dotenv = require('dotenv')
-// require('dotenv').config()
+const morgan = require('morgan')
+// Route files
+const bootcamp = require('./routes/bootcamps')
+const logger = require('./middleware/logger')
+// Load env vars
+dotenv.config({ path: './config/config.env' })
+const PORT = process.env.PORT || 5000
 
-dotenv.config({path: './config/config.env'})
+// Configure endpoint prefix's
+const app = express()
 
-const app = express() 
+if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
-const PORT = process.env.PORT || 5000;
+// Mount Routers
+app.use('/api/v1/bootcamps', bootcamp)
 
-app.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`))
+// Run server
+app.listen(
+  PORT,
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
+)
