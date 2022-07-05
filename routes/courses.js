@@ -7,6 +7,8 @@ const {
   deleteCourse,
 } = require('../controllers/courses')
 
+const { protect, authorize } = require('../middleware/auth')
+
 const Course = require('../models/Course')
 const advancedResults = require('../middleware/advancedResults')
 
@@ -22,10 +24,12 @@ router.route('/').get(
   }),
   getCourses
 )
-router.route('/').post(addCourse)
+router.route('/').post(protect, authorize('publisher', 'admin'), addCourse)
 //
 router.route('/:id').get(getCourse)
-router.route('/:id').put(updateCourse)
-router.route('/:id').delete(deleteCourse)
+router.route('/:id').put(protect, authorize('publisher', 'admin'), updateCourse)
+router
+  .route('/:id')
+  .delete(protect, authorize('publisher', 'admin'), deleteCourse)
 
 module.exports = router
