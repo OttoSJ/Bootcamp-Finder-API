@@ -6,8 +6,8 @@ const connectDB = require('./config/db')
 const colors = require('colors')
 const errorHandler = require('./middleware/error')
 const fileupload = require('express-fileupload')
+const cookieParser = require('cookie-parser')
 const path = require('path')
-// TO RUN SEVER = NPM RUN DEV
 
 // Load env vars
 dotenv.config({ path: './config/config.env' })
@@ -26,8 +26,11 @@ const auth = require('./routes/auth')
 // Configure endpoint prefix's
 const app = express()
 
-// Body parser
+// Body Parser
 app.use(express.json())
+
+// Cookie Parser
+app.use(cookieParser())
 
 // Dev Middleware
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
