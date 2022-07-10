@@ -1,5 +1,6 @@
 const ErrorResponse = require('../utils/errorResponse')
 const Bootcamp = require('../models/Bootcamp')
+const User = require('../models/User')
 const Review = require('../models/Review')
 const asyncHandler = require('../middleware/async')
 
@@ -19,4 +20,106 @@ exports.getReviews = asyncHandler(async (req, res, next) => {
   } else {
     res.status(200).json(res.advancedResults)
   }
+})
+
+// @desc  Get single review
+// @route GET /api/v1/reviews/:id
+// access Public
+exports.getReview = asyncHandler(async (req, res, next) => {
+  const review = await Review.findById(req.params.id).populate({
+    path: 'bootcamp',
+    select: 'name, description',
+  })
+
+  if (!review) {
+    return next(
+      new ErrorResponse(`No review found with the id of ${req.params.id}`, 404)
+    )
+  }
+  res.status(200).json({
+    success: true,
+    data: review,
+  })
+})
+
+// @desc  Add review
+// @route POST /api/v1/bootcamps/:bootcampId/reviews
+// access Private
+exports.addReview = asyncHandler(async (req, res, next) => {
+  req.body.bootcamp = req.params.bootcampId
+  req.body.user = req.user.id
+
+  const bootcamp = await Bootcamp.findById(req.params.bootcampId)
+
+  if (!bootcamp) {
+    return next(
+      new ErrorResponse(
+        `Bootcamp with the id of ${req.params.bootcampId} was not found`,
+        404
+      )
+    )
+  }
+
+  const review = await Review.create(req.body)
+
+  res.status(201).json({
+    success: true,
+    data: review,
+  })
+})
+
+// @desc  Update review
+// @route PUT /api/v1/reviews/:id
+// access Private
+exports.updateReview = asyncHandler(async (req, res, next) => {
+  const review = await Review.findById(req.params.id)
+
+  if (!review) {
+    return next(
+      new ErrorResponse(
+        `Review with the id of ${req.params.id} was not found`,
+        404
+      )
+    )
+  }
+
+  //   Make sure review belongs to user or sure is admin
+  if (review.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(new ErrorResponse(`Not authorized to delete this review`, 401))
+  }
+
+  await review.remove()
+
+  res.status(200).json({
+    success: true,
+    data: review,
+  })
+})
+
+// @desc  Delete review
+// @route DELETE /api/v1/reviews/:id
+// access Private
+exports.deleteReview = asyncHandler(async (req, res, next) => {
+  let review = await Review.findById(req.params.id)
+
+  if (!review) {
+    return next(
+      new ErrorResponse(
+        `Review with the id of ${req.params.id} was not found`,
+        404
+      )
+    )
+  }
+
+  //   Make sure review belongs to user or sure is admin
+  if (review.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(new ErrorResponse(`Not authorized to update this review`, 401))
+  }
+
+  review = await Review.findByIdAndDelete(req.params.id)
+
+  res.status(200).json({
+    success: true,
+    msg: `Review with the id ${req.params.id} was deleted`,
+  })
 })

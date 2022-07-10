@@ -5,7 +5,7 @@ const asyncHandler = require('../middleware/async')
 const sendEmail = require('../utils/sendEmail')
 
 // @desc Register User
-// @route POST /api/v1/register
+// @route POST /api/v1/auth/register
 // access Public
 exports.register = asyncHandler(async (req, res, next) => {
   const { name, email, password, role } = req.body
@@ -22,7 +22,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 })
 
 // @desc Login User
-// @route POST /api/v1/login
+// @route POST /api/v1/auth/login
 // access Public
 exports.login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body
@@ -46,6 +46,21 @@ exports.login = asyncHandler(async (req, res, next) => {
   }
 
   sendTokenResponse(user, 200, res)
+})
+
+// @desc Logout User / Clear cookie
+// @route PUT /api/v1/auth/logout
+// access Private
+exports.logout = asyncHandler(async (req, res, next) => {
+  res.cookie('token', 'none', {
+    expires: new Date(Date.now() + 10 + 1000),
+    httpOnly: true,
+  })
+
+  res.status(200).json({
+    success: true,
+    msg: `User with the id of ${req.user.id} was logged out`,
+  })
 })
 
 // @desc Get current logged in user
